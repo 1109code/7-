@@ -1,54 +1,84 @@
-https://magentino.tistory.com/69
-def update_pos(r, c, value, board, con):
-    if con[r][c]:
-        for c in con[r][c]:
-            board[c[0]][c[1]] = value
-    else:
-        board[r][c] = value
-    return board
+parent = [[0, 0] * 51 for _ in range(51)]
+board = [['EMPTY'] * 51 for _ in range(51)]
 
-def update_val(val1, val2, board, con):
-    for i range(1, 51):
+
+def find(r, c):
+    if parent[r][c] == [r, c]:
+        return [r, c]
+    pr, pc = parent[r][c]
+    return find(pr, pc)
+
+
+def union(r1, c1, r2, c2):
+    parent[r2][c2] = parent[r1][c1]
+
+
+def update_rc(r, c, val):
+    pr, pc = find(r, c)
+    board[pr][pc] = val
+
+
+def update_val(val1, val2):
+    for i in range(1, 51):
         for j in range(1, 51):
-            if board[i][j] == val1:
-                if con[r][c]:
-                    for c in con[r][c]:
-                        board[c[0]][c[1]] = val2
-                else:
-                    board[c[0]][c[1]] = val2
-    return board
+            pr, pc = find(i, j)
+            if board[pr][pc] == val1:
+                board[pr][pc] = val2
 
-def merge(r1, c1, r2, c2, board, con):
-    for c in con[r1][c1]:
-        con[c[]]
-        
-    con[r1][c1].append([r2, c2])
-    con[r2][c2].append([r1, c1])
-    
-    if board[r1][c1]:
-        board[r2][c2] = board[r1][c1]
+
+def merge(r1, c1, r2, c2):
+    r1, c1 = find(r1, c1)
+    r2, c2 = find(r2, c2)
+
+    if [r1, c1] == [r2, c2]:
+        return
+    elif board[r1][c1] != "EMPTY":
+        union(r1, c1, r2, c2)
     else:
-        board[r1][c1] = board[r2][c2]
+        union(r2, c2, r1, c1)
 
-def unmerge(r, c, board, con):
-    
-                
-def solution(commands):
-    board = [[""] * 51 for _ in range(51)]
-    connected = [([] for _ in range(51)) for _ in range(51)]
-    answer = []
-    
-    for c in commands:
-        if c[0] == "UDPATE":
-            if len(c) == 4:
-                board = update_pos(c[1], c[2], c[3], board, connected)
-            else:
-                board = update_val(c[1], c[2], board, connected)
-        elif c[0] == "MERGE":
-            board = merge(c[1], c[2], c[3], c[4], board, connected)
-        elif c[0] == "UNMERGE":
-            board = unmerge(c[1], c[2], board, connected)
+
+def unmerge(r, c):
+    pr, pc = find(r, c)
+    msg = board[pr][pc]
+
+    merge_list = []
+    for i in range(1, 51):
+        for j in range(1, 51):
+            pi, pj = find(i, j)
+            if parent[pi][pj] == [pr, pc]:
+                merge_list.append([i, j])
+
+    for i, j in merge_list:
+        parent[i][j] = [i, j]
+        if [i, j] == [r, c]:
+            board[i][j] = msg
         else:
-            print(board[c[1]][c[2]])
-            
+            board[i][j] = "EMPTY"
+
+
+def solution(commands):
+    answer = []
+    for i in range(1, 51):
+        for j in range(1, 51):
+            parent[i][j] = [i, j]
+
+    for c in commands:
+        c = c.split(" ")
+        if c[0] == "UPDATE":
+            if len(c) == 4:
+                update_rc(int(c[1]), int(c[2]), c[3])
+            else:
+                update_val(c[1], c[2])
+
+        elif c[0] == "MERGE":
+            merge(int(c[1]), int(c[2]), int(c[3]), int(c[4]))
+
+        elif c[0] == "UNMERGE":
+            unmerge(int(c[1]), int(c[2]))
+
+        else:
+            pr, pc = find(int(c[1]), int(c[2]))
+            answer.append(board[pr][pc])
+
     return answer
